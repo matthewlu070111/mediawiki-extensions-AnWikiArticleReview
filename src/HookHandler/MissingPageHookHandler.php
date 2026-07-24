@@ -2,10 +2,9 @@
 
 namespace MediaWiki\Extension\AnWikiArticleReview\HookHandler;
 
-use Article;
 use MediaWiki\Config\Config;
-use MediaWiki\Hook\BeforeDisplayNoArticleTextHook;
 use MediaWiki\Html\Html;
+use MediaWiki\Page\Hook\BeforeDisplayNoArticleTextHook;
 use MediaWiki\Permissions\PermissionManager;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\User\UserGroupManager;
