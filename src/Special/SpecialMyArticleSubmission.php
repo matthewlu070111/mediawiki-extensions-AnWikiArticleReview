@@ -24,7 +24,13 @@ class SpecialMyArticleSubmission extends SpecialPage {
 		private readonly Config $config,
 		private readonly Language $contentLanguage
 	) {
-		parent::__construct( 'MyArticleSubmission', 'article-review-submit' );
+		// MW 1.46+: pass only the canonical name; rights via getRestriction().
+		parent::__construct( 'MyArticleSubmission' );
+	}
+
+	/** @inheritDoc */
+	public function getRestriction(): string {
+		return 'article-review-submit';
 	}
 
 	/** @inheritDoc */

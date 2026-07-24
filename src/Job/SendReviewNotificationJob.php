@@ -2,13 +2,17 @@
 
 namespace MediaWiki\Extension\AnWikiArticleReview\Job;
 
+use MediaWiki\JobQueue\GenericParameterJob;
 use MediaWiki\JobQueue\Job;
 use MediaWiki\MediaWikiServices;
 
 /**
  * Async job to send a single review notification email via core UserMailer.
+ *
+ * Implements GenericParameterJob (params-only, no page title) as required by
+ * MediaWiki 1.46 JobFactory for jobs registered with needsPage: false.
  */
-class SendReviewNotificationJob extends Job {
+class SendReviewNotificationJob extends Job implements GenericParameterJob {
 
 	/**
 	 * @param array<string, mixed> $params

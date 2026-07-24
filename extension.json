@@ -1,6 +1,6 @@
 {
 	"name": "AnWikiArticleReview",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"author": [
 		"imxiaoanag"
 	],
@@ -65,7 +65,10 @@
 		}
 	},
 	"JobClasses": {
-		"SendReviewNotificationJob": "MediaWiki\\Extension\\AnWikiArticleReview\\Job\\SendReviewNotificationJob"
+		"SendReviewNotificationJob": {
+			"class": "MediaWiki\\Extension\\AnWikiArticleReview\\Job\\SendReviewNotificationJob",
+			"needsPage": false
+		}
 	},
 	"HookHandlers": {
 		"Schema": {
@@ -231,7 +234,7 @@
 		}
 	},
 	"ConfigRegistry": {
-		"AnWikiArticleReview": "GlobalVarConfig::newInstance"
+		"AnWikiArticleReview": "MediaWiki\\Config\\GlobalVarConfig::newInstance"
 	},
 	"MaintenanceScriptsDirectory": "maintenance",
 	"load_composer_autoloader": false,

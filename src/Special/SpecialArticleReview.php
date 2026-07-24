@@ -35,7 +35,13 @@ class SpecialArticleReview extends SpecialPage {
 		private readonly Config $config,
 		private readonly Language $contentLanguage
 	) {
-		parent::__construct( 'ArticleReview', 'article-review-review' );
+		// MW 1.46+: pass only the canonical name; rights via getRestriction().
+		parent::__construct( 'ArticleReview' );
+	}
+
+	/** @inheritDoc */
+	public function getRestriction(): string {
+		return 'article-review-review';
 	}
 
 	/** @inheritDoc */

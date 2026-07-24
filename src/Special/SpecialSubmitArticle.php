@@ -27,7 +27,13 @@ class SpecialSubmitArticle extends SpecialPage {
 		private readonly PermissionManager $permissionManager,
 		private readonly UserGroupManager $userGroupManager
 	) {
-		parent::__construct( 'SubmitArticle', 'article-review-submit' );
+		// MW 1.46+: pass only the canonical name; rights via getRestriction().
+		parent::__construct( 'SubmitArticle' );
+	}
+
+	/** @inheritDoc */
+	public function getRestriction(): string {
+		return 'article-review-submit';
 	}
 
 	/** @inheritDoc */

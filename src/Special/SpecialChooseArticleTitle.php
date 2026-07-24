@@ -19,7 +19,13 @@ class SpecialChooseArticleTitle extends FormSpecialPage {
 		private readonly TitleValidationService $titleValidation,
 		private readonly Config $config
 	) {
-		parent::__construct( 'ChooseArticleTitle', 'article-review-submit' );
+		// MW 1.46+: pass only the canonical name; rights via getRestriction().
+		parent::__construct( 'ChooseArticleTitle' );
+	}
+
+	/** @inheritDoc */
+	public function getRestriction(): string {
+		return 'article-review-submit';
 	}
 
 	/** @inheritDoc */
@@ -57,12 +63,14 @@ class SpecialChooseArticleTitle extends FormSpecialPage {
 
 		$this->getOutput()->addModuleStyles( 'ext.anWikiArticleReview.chooseTitle' );
 
-		// Prefill from ?title= (must still re-validate on submit)
+		// Prefill from ?title= (must still re-validate on submit).
+		// Do not name this helper setParameter(): FormSpecialPage already has a
+		// protected setParameter() used by parent::execute(); a private method
+		// with the same name is an illegal visibility reduction in PHP and
+		// fatals when the class is loaded (breaking Special:SpecialPages).
 		$request = $this->getRequest();
 		if ( $request->getCheck( 'title' ) && !$request->wasPosted() ) {
-			$prefill = $request->getText( 'title' );
-			// Store for form default via getFormFields
-			$this->setParameter( $prefill );
+			$this->setPrefillTitle( $request->getText( 'title' ) );
 		}
 
 		parent::execute( $par );
@@ -73,7 +81,7 @@ class SpecialChooseArticleTitle extends FormSpecialPage {
 	 */
 	private string $prefillTitle = '';
 
-	private function setParameter( string $title ): void {
+	private function setPrefillTitle( string $title ): void {
 		$this->prefillTitle = $title;
 	}
 

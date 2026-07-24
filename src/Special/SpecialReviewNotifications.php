@@ -14,7 +14,13 @@ class SpecialReviewNotifications extends SpecialPage {
 	public function __construct(
 		private readonly NotificationService $notificationService
 	) {
-		parent::__construct( 'ReviewNotifications', 'article-review-admin' );
+		// MW 1.46+: pass only the canonical name; rights via getRestriction().
+		parent::__construct( 'ReviewNotifications' );
+	}
+
+	/** @inheritDoc */
+	public function getRestriction(): string {
+		return 'article-review-admin';
 	}
 
 	/** @inheritDoc */
