@@ -2,11 +2,13 @@
 /**
  * Send a test review notification email via MediaWiki core mail.
  *
- * Usage:
+ * MediaWiki 1.40+ / 1.46 (from wiki install root):
+ *
  *   php maintenance/run.php AnWikiArticleReview:SendTestReviewEmail --to=admin@example.org
  *
- * Or (legacy):
- *   php extensions/AnWikiArticleReview/maintenance/SendTestReviewEmail.php --to=admin@example.org
+ * Path form (must use ./ or absolute path; bare "extensions/..." is wrong):
+ *
+ *   php maintenance/run.php ./extensions/AnWikiArticleReview/maintenance/SendTestReviewEmail.php --to=admin@example.org
  *
  * @file
  * @ingroup MediaWiki
@@ -17,16 +19,10 @@ namespace MediaWiki\Extension\AnWikiArticleReview\Maintenance;
 use MediaWiki\Maintenance\Maintenance;
 use MediaWiki\MediaWikiServices;
 
-// @codeCoverageIgnoreStart
-$IP = getenv( 'MW_INSTALL_PATH' );
-if ( $IP === false ) {
-	$IP = __DIR__ . '/../../..';
-}
-require_once "$IP/maintenance/Maintenance.php";
-// @codeCoverageIgnoreEnd
-
 /**
- * Maintenance script: send test email.
+ * Maintenance script: send test email through MediaWiki core mail.
+ *
+ * Compatible with MediaWiki 1.46 run.php (MaintenanceScriptsDirectory).
  */
 class SendTestReviewEmail extends Maintenance {
 
@@ -71,17 +67,23 @@ class SendTestReviewEmail extends Maintenance {
 			$this->output( "WARNING: \$wgEnableEmail is false. Send may fail.\n" );
 		}
 
+		if ( !$services->hasService( 'AnWikiArticleReview.NotificationService' ) ) {
+			$this->fatalError(
+				'Service AnWikiArticleReview.NotificationService not found. '
+				. 'Is the extension loaded in LocalSettings.php?'
+			);
+		}
+
 		/** @var \MediaWiki\Extension\AnWikiArticleReview\Service\NotificationService $service */
 		$service = $services->get( 'AnWikiArticleReview.NotificationService' );
 
 		$this->output( "Sending test email to $to ...\n" );
-		// Never print SMTP password or full config
 		$status = $service->sendTestEmail( $to );
 
 		if ( $status->isOK() ) {
 			$this->output( "SUCCESS: Test email accepted by MediaWiki mail layer.\n" );
 			$this->output(
-				"If the message does not arrive, check SMTP, spam folder, JobQueue, and logs.\n"
+				"If the message does not arrive, check SMTP, spam folder, and mail logs.\n"
 			);
 			return;
 		}
@@ -92,7 +94,6 @@ class SendTestReviewEmail extends Maintenance {
 			$m = $errors[0]['message'] ?? 'unknown';
 			$summary = is_array( $m ) ? (string)( $m[0] ?? 'unknown' ) : (string)$m;
 		}
-		// Sanitize: never echo credentials
 		$summary = preg_replace(
 			'/(password|passwd|pwd|secret)\s*[:=]\s*\S+/i',
 			'$1=***',
@@ -103,7 +104,5 @@ class SendTestReviewEmail extends Maintenance {
 	}
 }
 
-// @codeCoverageIgnoreStart
+// Required by MediaWiki run.php / MaintenanceScriptsDirectory discovery
 $maintClass = SendTestReviewEmail::class;
-require_once RUN_MAINTENANCE_IF_MAIN;
-// @codeCoverageIgnoreEnd

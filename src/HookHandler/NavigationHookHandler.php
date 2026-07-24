@@ -3,11 +3,10 @@
 namespace MediaWiki\Extension\AnWikiArticleReview\HookHandler;
 
 use MediaWiki\Config\Config;
-use MediaWiki\Hook\SkinTemplateNavigation__UniversalHook;
 use MediaWiki\Permissions\PermissionManager;
+use MediaWiki\Skin\Hook\SkinTemplateNavigation__UniversalHook;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\User\UserGroupManager;
-use SkinTemplate;
 
 /**
  * Adds personal navigation links for submission entry points.
@@ -23,7 +22,7 @@ class NavigationHookHandler implements SkinTemplateNavigation__UniversalHook {
 
 	/**
 	 * @inheritDoc
-	 * @param SkinTemplate $sktemplate
+	 * @param \SkinTemplate $sktemplate
 	 * @param array<string, array<string, mixed>>& $links
 	 */
 	public function onSkinTemplateNavigation__Universal( $sktemplate, &$links ): void {

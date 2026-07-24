@@ -42,7 +42,7 @@ This extension handles **new page review only**. It does not moderate edits to e
 
 | Component   | Version   |
 |------------|-----------|
-| MediaWiki  | 1.43+     |
+| MediaWiki  | 1.46+     |
 | PHP        | 8.1+      |
 | Database   | MariaDB 10.5+ / MySQL / SQLite / PostgreSQL |
 
@@ -329,10 +329,22 @@ php maintenance/run.php runJobs
 
 ### Test email
 
+Run from the **MediaWiki install root** (the directory that contains `LocalSettings.php` and `maintenance/`), not from inside the extension folder.
+
+**Preferred** (extension script name):
+
 ```bash
-php maintenance/run.php \
-    extensions/AnWikiArticleReview/maintenance/SendTestReviewEmail.php \
-    --to=admin@example.org
+php maintenance/run.php AnWikiArticleReview:SendTestReviewEmail --to=admin@example.org
+```
+
+**Alternative** — path must start with `./` or be absolute (plain `extensions/...` is wrong; `run.php` would look under `maintenance/extensions/...`):
+
+```bash
+php maintenance/run.php ./extensions/AnWikiArticleReview/maintenance/SendTestReviewEmail.php --to=admin@example.org
+```
+
+```bash
+php maintenance/run.php /var/www/paysegment/extensions/AnWikiArticleReview/maintenance/SendTestReviewEmail.php --to=admin@example.org
 ```
 
 If no `--to` is given, the first address in `$wgAnWikiArticleReviewNotificationRecipients` is used.
@@ -343,6 +355,8 @@ The script:
 - Uses MediaWiki core mail  
 - Never prints SMTP passwords  
 - Exits non-zero on failure  
+
+Before running: confirm the extension is loaded (`wfLoadExtension( 'AnWikiArticleReview' )`) and the file exists at `extensions/AnWikiArticleReview/maintenance/SendTestReviewEmail.php`.
 
 ---
 

@@ -6,7 +6,8 @@ All notable changes to AnWikiArticleReview are documented in this file.
 
 ### Added
 
-- Initial release for MediaWiki 1.43+
+- Initial release targeting MediaWiki **1.46+**
+- Maintenance script invocation documented for `run.php` (`AnWikiArticleReview:SendTestReviewEmail`)
 - Special pages: ChooseArticleTitle, SubmitArticle, MyArticleSubmission, ArticleReview, ReviewNotifications
 - Database tables: submission, revision, event, notification
 - Unique constraints: one submission per user, one per normalized title

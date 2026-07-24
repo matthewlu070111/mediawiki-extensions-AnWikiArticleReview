@@ -105,7 +105,7 @@ MediaWiki 扩展：**新条目投稿与编辑资格审核**。
 
 | 组件 | 版本 |
 |------|------|
-| MediaWiki | 1.43+ |
+| MediaWiki | **1.46+** |
 | PHP | 8.1+ |
 | 数据库 | MariaDB 10.5+ / MySQL / SQLite / PostgreSQL |
 
@@ -382,15 +382,35 @@ php maintenance/run.php runJobs
 
 ### 测试邮件
 
+在 **MediaWiki 安装根目录**执行（含 `LocalSettings.php` 和 `maintenance/` 的目录），不要在扩展子目录里瞎拼路径。
+
+**MediaWiki 1.46 推荐写法**（扩展脚本名，在 wiki 根目录执行）：
+
 ```bash
-php maintenance/run.php \
-    extensions/AnWikiArticleReview/maintenance/SendTestReviewEmail.php \
-    --to=admin@example.org
+cd /var/www/paysegment   # 换成你的 MediaWiki 根目录
+php maintenance/run.php AnWikiArticleReview:SendTestReviewEmail --to=admin@example.org
+```
+
+**也可以用路径**，但必须以 `./` 开头，或写绝对路径。  
+**不要**写成 `extensions/AnWikiArticleReview/...`（没有 `./`）——`run.php` 会到 `maintenance/extensions/...` 下找，正好就是你看到的 “Script not found”。
+
+```bash
+# 相对当前工作目录（注意开头的 ./）
+php maintenance/run.php ./extensions/AnWikiArticleReview/maintenance/SendTestReviewEmail.php --to=admin@example.org
+
+# 绝对路径示例
+php maintenance/run.php /var/www/paysegment/extensions/AnWikiArticleReview/maintenance/SendTestReviewEmail.php --to=admin@example.org
 ```
 
 未指定 `--to` 时，使用 `$wgAnWikiArticleReviewNotificationRecipients` 的第一个地址。
 
 脚本仅 CLI 运行，使用核心邮件，不打印 SMTP 密码，失败时以非零退出码退出。
+
+运行前确认：
+
+1. 已 `wfLoadExtension( 'AnWikiArticleReview' )`
+2. 文件真实存在：`extensions/AnWikiArticleReview/maintenance/SendTestReviewEmail.php`
+3. 在 wiki 根目录执行（你的环境一般是 `/var/www/paysegment`）
 
 ---
 
