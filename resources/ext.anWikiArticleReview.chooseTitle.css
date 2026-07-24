@@ -1,0 +1,12 @@
+.anwiki-title-exists {
+	margin-top: 1em;
+	padding: 0.75em 1em;
+	border: 1px solid #fc3;
+	background: #ffffe0;
+}
+
+.mw-htmlform .oo-ui-fieldLayout-help {
+	color: #54595d;
+	font-size: 0.9em;
+	margin-top: 0.35em;
+}

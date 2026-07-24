@@ -1,0 +1,10 @@
+/vendor/
+/node_modules/
+composer.lock
+*.swp
+*~
+.DS_Store
+.idea/
+.vscode/
+.phpunit.result.cache
+PLAN.md

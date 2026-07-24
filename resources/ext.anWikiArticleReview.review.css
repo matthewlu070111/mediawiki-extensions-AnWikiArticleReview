@@ -1,0 +1,58 @@
+.anwiki-review-tabs {
+	list-style: none;
+	margin: 0 0 1em;
+	padding: 0;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5em;
+}
+
+.anwiki-review-tabs li {
+	margin: 0;
+}
+
+.anwiki-review-tabs li a {
+	display: inline-block;
+	padding: 0.35em 0.75em;
+	border: 1px solid #a2a9b1;
+	border-radius: 2px;
+	background: #f8f9fa;
+	text-decoration: none;
+}
+
+.anwiki-review-tabs li.selected a {
+	background: #36c;
+	color: #fff;
+	border-color: #36c;
+}
+
+.anwiki-review-list {
+	width: 100%;
+}
+
+.anwiki-page-exists-warning {
+	padding: 0.75em 1em;
+	border: 1px solid #d33;
+	background: #fee7e6;
+}
+
+.anwiki-approve-form,
+.anwiki-reject-form {
+	margin: 1em 0;
+	padding: 1em;
+	border: 1px solid #c8ccd1;
+	background: #f8f9fa;
+}
+
+.anwiki-diff {
+	max-height: 25em;
+	overflow: auto;
+	background: #f8f9fa;
+	padding: 0.75em;
+	border: 1px solid #c8ccd1;
+	font-size: 0.9em;
+}
+
+.anwiki-events {
+	margin-left: 1.5em;
+}

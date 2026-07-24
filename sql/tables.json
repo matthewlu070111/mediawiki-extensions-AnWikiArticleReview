@@ -1,0 +1,323 @@
+[
+	{
+		"name": "anwiki_article_review_submission",
+		"comment": "Main article submission records (one per user / one per title)",
+		"columns": [
+			{
+				"name": "aars_id",
+				"comment": "Primary key",
+				"type": "integer",
+				"options": { "unsigned": true, "notnull": true, "autoincrement": true }
+			},
+			{
+				"name": "aars_submitter_user_id",
+				"comment": "User ID of the submitter",
+				"type": "integer",
+				"options": { "unsigned": true, "notnull": true }
+			},
+			{
+				"name": "aars_namespace",
+				"comment": "Target namespace ID",
+				"type": "integer",
+				"options": { "notnull": true }
+			},
+			{
+				"name": "aars_title",
+				"comment": "DB key of the normalized title",
+				"type": "binary",
+				"options": { "length": 255, "notnull": true }
+			},
+			{
+				"name": "aars_status",
+				"comment": "Submission status (0=pending,1=approved,2=rejected,3=withdrawn,4=conflict)",
+				"type": "integer",
+				"options": { "unsigned": true, "notnull": true, "default": 0 }
+			},
+			{
+				"name": "aars_current_revision_id",
+				"comment": "Current content revision ID",
+				"type": "integer",
+				"options": { "unsigned": true, "notnull": false }
+			},
+			{
+				"name": "aars_created_at",
+				"comment": "First submission timestamp (MW TS_MW)",
+				"type": "mwtimestamp",
+				"options": { "notnull": true }
+			},
+			{
+				"name": "aars_updated_at",
+				"comment": "Last update timestamp (MW TS_MW)",
+				"type": "mwtimestamp",
+				"options": { "notnull": true }
+			},
+			{
+				"name": "aars_reviewer_user_id",
+				"comment": "Last reviewer user ID",
+				"type": "integer",
+				"options": { "unsigned": true, "notnull": false }
+			},
+			{
+				"name": "aars_reviewed_at",
+				"comment": "Last review timestamp",
+				"type": "mwtimestamp",
+				"options": { "notnull": false }
+			},
+			{
+				"name": "aars_review_comment",
+				"comment": "Last review comment",
+				"type": "blob",
+				"options": { "length": 65535, "notnull": false }
+			},
+			{
+				"name": "aars_page_id",
+				"comment": "Published page ID after approval",
+				"type": "integer",
+				"options": { "unsigned": true, "notnull": false }
+			},
+			{
+				"name": "aars_published_revision_id",
+				"comment": "Published revision ID after approval",
+				"type": "integer",
+				"options": { "unsigned": true, "notnull": false }
+			},
+			{
+				"name": "aars_row_version",
+				"comment": "Optimistic locking counter",
+				"type": "integer",
+				"options": { "unsigned": true, "notnull": true, "default": 1 }
+			}
+		],
+		"indexes": [
+			{
+				"name": "aars_submitter_user_id",
+				"columns": [ "aars_submitter_user_id" ],
+				"unique": true
+			},
+			{
+				"name": "aars_namespace_title",
+				"columns": [ "aars_namespace", "aars_title" ],
+				"unique": true
+			},
+			{
+				"name": "aars_status_updated",
+				"columns": [ "aars_status", "aars_updated_at" ],
+				"unique": false
+			},
+			{
+				"name": "aars_reviewer_user_id",
+				"columns": [ "aars_reviewer_user_id" ],
+				"unique": false
+			}
+		],
+		"pk": [ "aars_id" ]
+	},
+	{
+		"name": "anwiki_article_review_revision",
+		"comment": "Submission body versions (append-only)",
+		"columns": [
+			{
+				"name": "aarr_id",
+				"comment": "Primary key",
+				"type": "integer",
+				"options": { "unsigned": true, "notnull": true, "autoincrement": true }
+			},
+			{
+				"name": "aarr_submission_id",
+				"comment": "Parent submission ID",
+				"type": "integer",
+				"options": { "unsigned": true, "notnull": true }
+			},
+			{
+				"name": "aarr_author_user_id",
+				"comment": "Author user ID",
+				"type": "integer",
+				"options": { "unsigned": true, "notnull": true }
+			},
+			{
+				"name": "aarr_content",
+				"comment": "Wikitext body",
+				"type": "blob",
+				"options": { "length": 16777215, "notnull": true }
+			},
+			{
+				"name": "aarr_summary",
+				"comment": "Edit summary",
+				"type": "binary",
+				"options": { "length": 500, "notnull": true }
+			},
+			{
+				"name": "aarr_sha1",
+				"comment": "SHA-1 of content",
+				"type": "binary",
+				"options": { "length": 40, "notnull": true }
+			},
+			{
+				"name": "aarr_created_at",
+				"comment": "Creation timestamp",
+				"type": "mwtimestamp",
+				"options": { "notnull": true }
+			}
+		],
+		"indexes": [
+			{
+				"name": "aarr_submission_created",
+				"columns": [ "aarr_submission_id", "aarr_created_at" ],
+				"unique": false
+			}
+		],
+		"pk": [ "aarr_id" ]
+	},
+	{
+		"name": "anwiki_article_review_event",
+		"comment": "Audit log of review actions",
+		"columns": [
+			{
+				"name": "aare_id",
+				"comment": "Primary key",
+				"type": "integer",
+				"options": { "unsigned": true, "notnull": true, "autoincrement": true }
+			},
+			{
+				"name": "aare_submission_id",
+				"comment": "Submission ID",
+				"type": "integer",
+				"options": { "unsigned": true, "notnull": true }
+			},
+			{
+				"name": "aare_actor_user_id",
+				"comment": "Actor user ID",
+				"type": "integer",
+				"options": { "unsigned": true, "notnull": true }
+			},
+			{
+				"name": "aare_action",
+				"comment": "Action name (submit, resubmit, reject, approve, ...)",
+				"type": "binary",
+				"options": { "length": 32, "notnull": true }
+			},
+			{
+				"name": "aare_old_status",
+				"comment": "Previous status",
+				"type": "integer",
+				"options": { "unsigned": true, "notnull": false }
+			},
+			{
+				"name": "aare_new_status",
+				"comment": "New status",
+				"type": "integer",
+				"options": { "unsigned": true, "notnull": true }
+			},
+			{
+				"name": "aare_comment",
+				"comment": "Event comment",
+				"type": "blob",
+				"options": { "length": 65535, "notnull": false }
+			},
+			{
+				"name": "aare_created_at",
+				"comment": "Event timestamp",
+				"type": "mwtimestamp",
+				"options": { "notnull": true }
+			}
+		],
+		"indexes": [
+			{
+				"name": "aare_submission_created",
+				"columns": [ "aare_submission_id", "aare_created_at" ],
+				"unique": false
+			},
+			{
+				"name": "aare_action",
+				"columns": [ "aare_action" ],
+				"unique": false
+			}
+		],
+		"pk": [ "aare_id" ]
+	},
+	{
+		"name": "anwiki_article_review_notification",
+		"comment": "Email notification records for idempotent delivery",
+		"columns": [
+			{
+				"name": "aarn_id",
+				"comment": "Primary key",
+				"type": "integer",
+				"options": { "unsigned": true, "notnull": true, "autoincrement": true }
+			},
+			{
+				"name": "aarn_event_id",
+				"comment": "Related review event ID",
+				"type": "integer",
+				"options": { "unsigned": true, "notnull": true }
+			},
+			{
+				"name": "aarn_recipient",
+				"comment": "Recipient email address",
+				"type": "binary",
+				"options": { "length": 255, "notnull": true }
+			},
+			{
+				"name": "aarn_recipient_hash",
+				"comment": "SHA-256 hash of normalized recipient for uniqueness",
+				"type": "binary",
+				"options": { "length": 64, "notnull": true }
+			},
+			{
+				"name": "aarn_notification_type",
+				"comment": "Notification type matching event action",
+				"type": "binary",
+				"options": { "length": 32, "notnull": true }
+			},
+			{
+				"name": "aarn_status",
+				"comment": "queued, sending, sent, failed, disabled",
+				"type": "binary",
+				"options": { "length": 16, "notnull": true, "default": "queued" }
+			},
+			{
+				"name": "aarn_attempt_count",
+				"comment": "Number of send attempts",
+				"type": "integer",
+				"options": { "unsigned": true, "notnull": true, "default": 0 }
+			},
+			{
+				"name": "aarn_last_error",
+				"comment": "Sanitized last error summary",
+				"type": "blob",
+				"options": { "length": 65535, "notnull": false }
+			},
+			{
+				"name": "aarn_created_at",
+				"comment": "Created timestamp",
+				"type": "mwtimestamp",
+				"options": { "notnull": true }
+			},
+			{
+				"name": "aarn_sent_at",
+				"comment": "Successfully sent timestamp",
+				"type": "mwtimestamp",
+				"options": { "notnull": false }
+			},
+			{
+				"name": "aarn_updated_at",
+				"comment": "Last update timestamp",
+				"type": "mwtimestamp",
+				"options": { "notnull": true }
+			}
+		],
+		"indexes": [
+			{
+				"name": "aarn_event_recipient_type",
+				"columns": [ "aarn_event_id", "aarn_recipient_hash", "aarn_notification_type" ],
+				"unique": true
+			},
+			{
+				"name": "aarn_status_updated",
+				"columns": [ "aarn_status", "aarn_updated_at" ],
+				"unique": false
+			}
+		],
+		"pk": [ "aarn_id" ]
+	}
+]

@@ -1,0 +1,238 @@
+{
+	"name": "AnWikiArticleReview",
+	"version": "0.1.0",
+	"author": [
+		"imxiaoanag"
+	],
+	"url": "https://www.mediawiki.org/wiki/Extension:AnWikiArticleReview",
+	"descriptionmsg": "anwikiarticlereview-desc",
+	"license-name": "GPL-2.0-or-later",
+	"type": "specialpage",
+	"requires": {
+		"MediaWiki": ">= 1.43.0"
+	},
+	"AutoloadNamespaces": {
+		"MediaWiki\\Extension\\AnWikiArticleReview\\": "src/"
+	},
+	"ServiceWiringFiles": [
+		"ServiceWiring.php"
+	],
+	"SpecialPages": {
+		"ChooseArticleTitle": {
+			"class": "MediaWiki\\Extension\\AnWikiArticleReview\\Special\\SpecialChooseArticleTitle",
+			"services": [
+				"AnWikiArticleReview.TitleValidationService",
+				"MainConfig"
+			]
+		},
+		"SubmitArticle": {
+			"class": "MediaWiki\\Extension\\AnWikiArticleReview\\Special\\SpecialSubmitArticle",
+			"services": [
+				"AnWikiArticleReview.TitleValidationService",
+				"AnWikiArticleReview.SubmissionService",
+				"MainConfig",
+				"ContentLanguage",
+				"PermissionManager",
+				"UserGroupManager"
+			]
+		},
+		"MyArticleSubmission": {
+			"class": "MediaWiki\\Extension\\AnWikiArticleReview\\Special\\SpecialMyArticleSubmission",
+			"services": [
+				"AnWikiArticleReview.SubmissionService",
+				"AnWikiArticleReview.TitleValidationService",
+				"MainConfig",
+				"ContentLanguage"
+			]
+		},
+		"ArticleReview": {
+			"class": "MediaWiki\\Extension\\AnWikiArticleReview\\Special\\SpecialArticleReview",
+			"services": [
+				"AnWikiArticleReview.SubmissionService",
+				"AnWikiArticleReview.ReviewService",
+				"AnWikiArticleReview.ApprovalService",
+				"AnWikiArticleReview.NotificationService",
+				"MainConfig",
+				"ContentLanguage"
+			]
+		},
+		"ReviewNotifications": {
+			"class": "MediaWiki\\Extension\\AnWikiArticleReview\\Special\\SpecialReviewNotifications",
+			"services": [
+				"AnWikiArticleReview.NotificationService"
+			]
+		}
+	},
+	"JobClasses": {
+		"SendReviewNotificationJob": "MediaWiki\\Extension\\AnWikiArticleReview\\Job\\SendReviewNotificationJob"
+	},
+	"HookHandlers": {
+		"Schema": {
+			"class": "MediaWiki\\Extension\\AnWikiArticleReview\\HookHandler\\SchemaHookHandler"
+		},
+		"Navigation": {
+			"class": "MediaWiki\\Extension\\AnWikiArticleReview\\HookHandler\\NavigationHookHandler",
+			"services": [
+				"MainConfig",
+				"UserGroupManager",
+				"PermissionManager"
+			]
+		},
+		"MissingPage": {
+			"class": "MediaWiki\\Extension\\AnWikiArticleReview\\HookHandler\\MissingPageHookHandler",
+			"services": [
+				"MainConfig",
+				"UserGroupManager",
+				"PermissionManager"
+			]
+		}
+	},
+	"Hooks": {
+		"LoadExtensionSchemaUpdates": "Schema",
+		"SkinTemplateNavigation::Universal": "Navigation",
+		"BeforeDisplayNoArticleText": "MissingPage"
+	},
+	"AvailableRights": [
+		"article-review-submit",
+		"article-review-review",
+		"article-review-admin"
+	],
+	"GroupPermissions": {
+		"user": {
+			"article-review-submit": true
+		},
+		"article-reviewer": {
+			"article-review-review": true
+		},
+		"sysop": {
+			"article-review-review": true,
+			"article-review-admin": true
+		}
+	},
+	"GrantPermissions": {
+		"basic": {
+			"article-review-submit": true
+		}
+	},
+	"ResourceFileModulePaths": {
+		"localBasePath": "resources",
+		"remoteExtPath": "AnWikiArticleReview/resources"
+	},
+	"ResourceModules": {
+		"ext.anWikiArticleReview.chooseTitle": {
+			"styles": [
+				"ext.anWikiArticleReview.chooseTitle.css"
+			]
+		},
+		"ext.anWikiArticleReview.submit": {
+			"styles": [
+				"ext.anWikiArticleReview.submit.css"
+			]
+		},
+		"ext.anWikiArticleReview.review": {
+			"styles": [
+				"ext.anWikiArticleReview.review.css"
+			],
+			"scripts": [
+				"ext.anWikiArticleReview.review.js"
+			],
+			"messages": [
+				"anwikiarticlereview-confirm-approve",
+				"anwikiarticlereview-confirm-reject"
+			]
+		}
+	},
+	"MessagesDirs": {
+		"AnWikiArticleReview": [
+			"i18n"
+		]
+	},
+	"ExtensionMessagesFiles": {
+		"AnWikiArticleReviewAlias": "AnWikiArticleReview.alias.php"
+	},
+	"config": {
+		"AnWikiArticleReviewAllowedNamespaces": {
+			"value": [
+				0
+			],
+			"description": "Namespaces allowed for article submissions (default: main namespace)"
+		},
+		"AnWikiArticleReviewApprovedGroup": {
+			"value": "approved",
+			"description": "User group granted on approval"
+		},
+		"AnWikiArticleReviewPromoteOnApprove": {
+			"value": true,
+			"description": "Whether to add submitter to the approved group on approval"
+		},
+		"AnWikiArticleReviewTitleHint": {
+			"value": "",
+			"description": "Help text shown below the title input (plain text, HTML-escaped)"
+		},
+		"AnWikiArticleReviewTitlePlaceholder": {
+			"value": "",
+			"description": "Placeholder attribute for the title input"
+		},
+		"AnWikiArticleReviewMinContentBytes": {
+			"value": 100,
+			"description": "Minimum submission body size in bytes"
+		},
+		"AnWikiArticleReviewMaxContentBytes": {
+			"value": 2097152,
+			"description": "Maximum submission body size in bytes"
+		},
+		"AnWikiArticleReviewMaxSummaryBytes": {
+			"value": 500,
+			"description": "Maximum edit summary size in bytes"
+		},
+		"AnWikiArticleReviewAllowResubmit": {
+			"value": true,
+			"description": "Allow users to resubmit rejected/withdrawn submissions"
+		},
+		"AnWikiArticleReviewAllowWithdraw": {
+			"value": true,
+			"description": "Allow users to withdraw their pending submissions"
+		},
+		"AnWikiArticleReviewRequireConfirmedEmail": {
+			"value": false,
+			"description": "Require confirmed email before submitting"
+		},
+		"AnWikiArticleReviewShowLinkOnMissingPages": {
+			"value": true,
+			"description": "Show submit link on missing allowed pages for unapproved users"
+		},
+		"AnWikiArticleReviewEmailNotifications": {
+			"value": false,
+			"description": "Enable email notifications for review events"
+		},
+		"AnWikiArticleReviewNotificationRecipients": {
+			"value": [],
+			"description": "List of email addresses to notify on review events"
+		},
+		"AnWikiArticleReviewNotificationEvents": {
+			"value": [
+				"submit",
+				"resubmit"
+			],
+			"description": "Event types that trigger email notifications"
+		},
+		"AnWikiArticleReviewEmailSubjectPrefix": {
+			"value": "[AnWikiArticleReview]",
+			"description": "Prefix for notification email subjects"
+		},
+		"AnWikiArticleReviewEmailIncludeContentExcerpt": {
+			"value": false,
+			"description": "Include a plain-text excerpt of the submission body in emails"
+		},
+		"AnWikiArticleReviewEmailContentExcerptLength": {
+			"value": 300,
+			"description": "Maximum length of content excerpt in emails"
+		}
+	},
+	"ConfigRegistry": {
+		"AnWikiArticleReview": "GlobalVarConfig::newInstance"
+	},
+	"MaintenanceScriptsDirectory": "maintenance",
+	"load_composer_autoloader": false,
+	"manifest_version": 2
+}

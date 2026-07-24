@@ -1,0 +1,41 @@
+.anwiki-readonly-title {
+	font-weight: bold;
+	font-size: 1.1em;
+	margin: 0.25em 0 1em;
+}
+
+.anwiki-change-title {
+	margin-bottom: 1em;
+}
+
+.anwiki-preview {
+	border: 1px solid #a2a9b1;
+	padding: 1em;
+	margin: 1em 0;
+	background: #f8f9fa;
+}
+
+.anwiki-preview-summary {
+	margin-top: 0.5em;
+}
+
+.anwiki-raw-content {
+	max-height: 30em;
+	overflow: auto;
+	background: #f8f9fa;
+	padding: 0.75em;
+	border: 1px solid #c8ccd1;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+#anwiki-submit-form textarea,
+#anwiki-resubmit-form textarea {
+	width: 100%;
+	max-width: 60em;
+	font-family: monospace, monospace;
+}
+
+.anwiki-my-submission {
+	margin-bottom: 1.5em;
+}
