@@ -236,14 +236,18 @@ Three layers:
 ```php
 $wgAnWikiArticleReviewEmailNotifications = true;
 
+// Staff / reviewer inbox
 $wgAnWikiArticleReviewNotificationRecipients = [
     'review@example.org',
 ];
-
 $wgAnWikiArticleReviewNotificationEvents = [
-    'submit',
-    'resubmit',
-    // optional: 'approve', 'reject', 'conflict'
+    'submit', 'resubmit', 'approve', 'reject', 'conflict',
+];
+
+// Submitter outcome mail (account email)
+$wgAnWikiArticleReviewNotifySubmitter = true;
+$wgAnWikiArticleReviewSubmitterNotificationEvents = [
+    'approve', 'reject', 'conflict', 'admin-reset',
 ];
 
 $wgAnWikiArticleReviewEmailSubjectPrefix = '[AnWikiArticleReview]';
@@ -370,8 +374,8 @@ Before running: confirm the extension is loaded (`wfLoadExtension( 'AnWikiArticl
 | Check | What to verify |
 |-------|----------------|
 | Mail enabled | `$wgEnableEmail === true` |
-| Recipients | `$wgAnWikiArticleReviewNotificationRecipients` not empty |
-| Events | Event type is in `$wgAnWikiArticleReviewNotificationEvents` |
+| Recipients | Admin list not empty **or** submitter notify enabled with a user email |
+| Events | Type is in admin and/or submitter event lists |
 | From address | `$wgPasswordSender` matches provider-verified sender |
 | SMTP host/port | Correct host, port, TLS scheme |
 | TLS certificates | PHP CA bundle valid |
@@ -402,7 +406,9 @@ Before running: confirm the extension is loaded (`wfLoadExtension( 'AnWikiArticl
 | `$wgAnWikiArticleReviewShowLinkOnMissingPages` | `true` | Missing-page prompt |
 | `$wgAnWikiArticleReviewEmailNotifications` | `false` | Enable email |
 | `$wgAnWikiArticleReviewNotificationRecipients` | `[]` | Admin emails |
-| `$wgAnWikiArticleReviewNotificationEvents` | `['submit','resubmit']` | Events to notify |
+| `$wgAnWikiArticleReviewNotificationEvents` | `submit/resubmit/approve/reject/conflict` | Admin events |
+| `$wgAnWikiArticleReviewNotifySubmitter` | `true` | Email the author on outcomes |
+| `$wgAnWikiArticleReviewSubmitterNotificationEvents` | `approve/reject/conflict/admin-reset` | Submitter events |
 | `$wgAnWikiArticleReviewEmailSubjectPrefix` | `'[AnWikiArticleReview]'` | Subject prefix |
 | `$wgAnWikiArticleReviewEmailIncludeContentExcerpt` | `false` | Include excerpt |
 | `$wgAnWikiArticleReviewEmailContentExcerptLength` | `300` | Excerpt length |

@@ -234,7 +234,7 @@ class ReviewService {
 				return Status::newFatal( 'anwikiarticlereview-concurrent-modification' );
 			}
 
-			$this->eventRepository->insert( [
+			$eventId = $this->eventRepository->insert( [
 				'aare_submission_id' => $submission->getId(),
 				'aare_actor_user_id' => $admin->getId(),
 				'aare_action' => ReviewEvent::ACTION_ADMIN_RESET,
@@ -251,6 +251,12 @@ class ReviewService {
 			}
 			return Status::newFatal( 'anwikiarticlereview-review-failed' );
 		}
+
+		$this->notificationService->queueForEvent(
+			$eventId,
+			ReviewEvent::ACTION_ADMIN_RESET,
+			$submissionId
+		);
 
 		return Status::newGood( $this->submissionRepository->findById( $submissionId ) );
 	}

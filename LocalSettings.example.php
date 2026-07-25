@@ -78,6 +78,7 @@ $wgAnWikiArticleReviewShowLinkOnMissingPages = true;
 
 $wgAnWikiArticleReviewEmailNotifications = true;
 
+// Staff / reviewer inbox (new submissions, outcomes, conflicts)
 $wgAnWikiArticleReviewNotificationRecipients = [
 	'review@example.org',
 ];
@@ -85,7 +86,18 @@ $wgAnWikiArticleReviewNotificationRecipients = [
 $wgAnWikiArticleReviewNotificationEvents = [
 	'submit',
 	'resubmit',
+	'approve',
+	'reject',
 	'conflict',
+];
+
+// Also email the submitter on review outcomes (uses their account email)
+$wgAnWikiArticleReviewNotifySubmitter = true;
+$wgAnWikiArticleReviewSubmitterNotificationEvents = [
+	'approve',
+	'reject',
+	'conflict',
+	'admin-reset', // 管理员重审 / 重新打开待审
 ];
 
 $wgAnWikiArticleReviewEmailSubjectPrefix =

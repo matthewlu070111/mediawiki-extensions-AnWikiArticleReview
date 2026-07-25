@@ -72,15 +72,22 @@ MediaWiki 扩展：**新条目投稿与编辑资格审核**。
 | 标题输入框 placeholder | `''` 空 | 空则使用 i18n 默认占位文字 |
 | MediaWiki 核心 SMTP | **不属于本扩展** | 需站点自行配置 `$wgEnableEmail`、`$wgSMTP` 等 |
 
-### 邮件事件默认列表（仅在邮件总开关打开且有收件人时有效）
+### 邮件事件默认列表（仅在邮件总开关打开时有效）
 
-默认会通知的事件类型：
+**管理员收件人**（`$wgAnWikiArticleReviewNotificationRecipients`）默认事件：
 
 ```php
-[ 'submit', 'resubmit' ]  // 首次提交、重新提交
+[ 'submit', 'resubmit', 'approve', 'reject', 'conflict' ]
 ```
 
-**默认不会**因 `approve` / `reject` / `conflict` 发信（需自行加入 `$wgAnWikiArticleReviewNotificationEvents`）。
+**投稿者本人**（账号邮箱）默认也会收到结果通知：
+
+```php
+$wgAnWikiArticleReviewNotifySubmitter = true; // 默认 true
+// 默认事件：approve / reject / conflict / admin-reset（重审）
+```
+
+投稿者邮箱取自 MediaWiki 用户资料（`User::getEmail()`）；无有效邮箱则跳过该用户、不影响审核事务。
 
 ### 默认权限（扩展自带，加载后即生效）
 
@@ -96,7 +103,7 @@ MediaWiki 扩展：**新条目投稿与编辑资格审核**。
 ### 一句话总结
 
 - **投稿 / 审核 / 重提 / 撤回 / 批准晋升 / 缺页入口**：默认可用（权限与开关如上）。
-- **邮件**：默认**关**；打开后默认只通知「提交」和「重新提交」，且要自己填收件人并配置 MediaWiki SMTP。
+- **邮件**：默认**关**；打开后通知管理员（提交/重提/通过/驳回/冲突），并默认把通过/驳回/冲突/重审结果发到**投稿者邮箱**；需配置 MediaWiki SMTP。
 - **普通用户不能直接编辑**：扩展不代你关，必须在 `LocalSettings.php` 里自己关。
 
 ---
@@ -293,14 +300,18 @@ VisualEditor 依赖真实页面的编辑会话（Parsoid + 编辑 API），不�
 // 默认 false；要发信必须显式打开
 $wgAnWikiArticleReviewEmailNotifications = true;
 
+// 管理员 / 审核组邮箱
 $wgAnWikiArticleReviewNotificationRecipients = [
     'review@example.org',
 ];
-
-// 默认已是 submit + resubmit；可按需追加 approve / reject / conflict
 $wgAnWikiArticleReviewNotificationEvents = [
-    'submit',
-    'resubmit',
+    'submit', 'resubmit', 'approve', 'reject', 'conflict',
+];
+
+// 投稿者结果通知（账号邮箱；通过 / 驳回 / 冲突 / 管理员重审）
+$wgAnWikiArticleReviewNotifySubmitter = true;
+$wgAnWikiArticleReviewSubmitterNotificationEvents = [
+    'approve', 'reject', 'conflict', 'admin-reset',
 ];
 
 $wgAnWikiArticleReviewEmailSubjectPrefix = '[支付卡百科新条目审核]';
@@ -460,7 +471,9 @@ php maintenance/run.php /var/www/paysegment/extensions/AnWikiArticleReview/maint
 | `$wgAnWikiArticleReviewShowLinkOnMissingPages` | `true` | 缺页显示投稿入口 |
 | `$wgAnWikiArticleReviewEmailNotifications` | `false` | 邮件通知总开关 |
 | `$wgAnWikiArticleReviewNotificationRecipients` | `[]` | 管理员收件邮箱列表 |
-| `$wgAnWikiArticleReviewNotificationEvents` | `['submit','resubmit']` | 触发通知的事件 |
+| `$wgAnWikiArticleReviewNotificationEvents` | `submit/resubmit/approve/reject/conflict` | 通知管理员的事件 |
+| `$wgAnWikiArticleReviewNotifySubmitter` | `true` | 是否向投稿者发结果邮件 |
+| `$wgAnWikiArticleReviewSubmitterNotificationEvents` | `approve/reject/conflict/admin-reset` | 通知投稿者的事件 |
 | `$wgAnWikiArticleReviewEmailSubjectPrefix` | `'[AnWikiArticleReview]'` | 邮件主题前缀 |
 | `$wgAnWikiArticleReviewEmailIncludeContentExcerpt` | `false` | 是否附带正文摘要 |
 | `$wgAnWikiArticleReviewEmailContentExcerptLength` | `300` | 摘要最大长度 |

@@ -1,6 +1,6 @@
 {
 	"name": "AnWikiArticleReview",
-	"version": "0.1.3",
+	"version": "0.1.4",
 	"author": [
 		"imxiaoanag"
 	],
@@ -224,9 +224,25 @@
 		"AnWikiArticleReviewNotificationEvents": {
 			"value": [
 				"submit",
-				"resubmit"
+				"resubmit",
+				"approve",
+				"reject",
+				"conflict"
 			],
-			"description": "Event types that trigger email notifications"
+			"description": "Event types that notify configured admin/staff recipients"
+		},
+		"AnWikiArticleReviewNotifySubmitter": {
+			"value": true,
+			"description": "Also email the submission author on outcome events (approve/reject/re-review)"
+		},
+		"AnWikiArticleReviewSubmitterNotificationEvents": {
+			"value": [
+				"approve",
+				"reject",
+				"conflict",
+				"admin-reset"
+			],
+			"description": "Event types that email the submitter when NotifySubmitter is enabled"
 		},
 		"AnWikiArticleReviewEmailSubjectPrefix": {
 			"value": "[AnWikiArticleReview]",

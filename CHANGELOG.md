@@ -2,6 +2,19 @@
 
 All notable changes to AnWikiArticleReview are documented in this file.
 
+## [0.1.4] — 2026-07-25
+
+### Added
+
+- **Submitter email notifications** on review outcomes: approve, reject, conflict, and admin re-open (`admin-reset`). Uses the user’s MediaWiki account email.
+- Config: `$wgAnWikiArticleReviewNotifySubmitter` (default `true`) and `$wgAnWikiArticleReviewSubmitterNotificationEvents`.
+- Submitter-facing email subjects/bodies (including review comment, my-submission link, published page on approve).
+- Admin reset now queues notification jobs like other review actions.
+
+### Changed
+
+- Default admin `$wgAnWikiArticleReviewNotificationEvents` now includes `approve`, `reject`, and `conflict` (in addition to `submit` / `resubmit`).
+
 ## [0.1.3] — 2026-07-25
 
 ### Fixed

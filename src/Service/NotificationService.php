@@ -46,7 +46,12 @@ class NotificationService implements LoggerAwareInterface {
 
 	/**
 	 * After a successful review event, create notification rows and queue jobs.
-	 * Safe no-op when notifications are disabled or recipients empty.
+	 * Safe no-op when notifications are disabled.
+	 *
+	 * Sends to:
+	 * - Configured admin recipients when the event is in NotificationEvents
+	 * - The submitter's account email when NotifySubmitter is on and the event
+	 *   is in SubmitterNotificationEvents (approve / reject / re-review, etc.)
 	 */
 	public function queueForEvent(
 		int $eventId,
@@ -57,27 +62,69 @@ class NotificationService implements LoggerAwareInterface {
 			return;
 		}
 
-		$events = $this->config->get( 'AnWikiArticleReviewNotificationEvents' );
-		if ( !is_array( $events ) || !in_array( $eventType, $events, true ) ) {
-			return;
+		/** @var array<string, array{email:string,audience:string}> $targets */
+		$targets = [];
+
+		// Admin / staff recipients
+		$adminEvents = $this->config->get( 'AnWikiArticleReviewNotificationEvents' );
+		if ( is_array( $adminEvents ) && in_array( $eventType, $adminEvents, true ) ) {
+			foreach ( $this->normalizeRecipients(
+				$this->config->get( 'AnWikiArticleReviewNotificationRecipients' )
+			) as $email ) {
+				$key = strtolower( $email ) . '|admin';
+				$targets[$key] = [
+					'email' => $email,
+					'audience' => ReviewNotificationMessageBuilder::AUDIENCE_ADMIN,
+				];
+			}
 		}
 
-		$recipients = $this->normalizeRecipients(
-			$this->config->get( 'AnWikiArticleReviewNotificationRecipients' )
-		);
-		if ( $recipients === [] ) {
-			$this->logger->info( 'AnWikiArticleReview: no notification recipients configured' );
+		// Submitter (outcome of review: approve / reject / conflict / re-open)
+		if ( $this->config->get( 'AnWikiArticleReviewNotifySubmitter' ) ) {
+			$submitterEvents = $this->config->get(
+				'AnWikiArticleReviewSubmitterNotificationEvents'
+			);
+			if ( is_array( $submitterEvents )
+				&& in_array( $eventType, $submitterEvents, true )
+			) {
+				$submitterEmail = $this->getSubmitterEmail( $submissionId );
+				if ( $submitterEmail !== null ) {
+					$key = strtolower( $submitterEmail ) . '|submitter';
+					$targets[$key] = [
+						'email' => $submitterEmail,
+						'audience' => ReviewNotificationMessageBuilder::AUDIENCE_SUBMITTER,
+					];
+				} else {
+					$this->logger->info(
+						'AnWikiArticleReview: submitter has no usable email; skip user notify',
+						[ 'submissionId' => $submissionId, 'eventType' => $eventType ]
+					);
+				}
+			}
+		}
+
+		if ( $targets === [] ) {
+			$this->logger->info(
+				'AnWikiArticleReview: no notification recipients for event',
+				[ 'eventType' => $eventType, 'submissionId' => $submissionId ]
+			);
 			return;
 		}
 
 		$now = wfTimestampNow();
-		foreach ( $recipients as $email ) {
-			$hash = hash( 'sha256', strtolower( $email ) );
+		foreach ( $targets as $target ) {
+			$email = $target['email'];
+			$audience = $target['audience'];
+			// Uniqueness includes audience so admin+submitter both get a row
+			// even when the addresses happen to match.
+			$notificationType = $this->notificationTypeKey( $eventType, $audience );
+			$hash = hash( 'sha256', strtolower( $email ) . '|' . $audience );
+
 			$id = $this->notificationRepository->insertIgnore( [
 				'aarn_event_id' => $eventId,
 				'aarn_recipient' => $email,
 				'aarn_recipient_hash' => $hash,
-				'aarn_notification_type' => $eventType,
+				'aarn_notification_type' => $notificationType,
 				'aarn_status' => Notification::STATUS_QUEUED,
 				'aarn_attempt_count' => 0,
 				'aarn_last_error' => null,
@@ -91,7 +138,7 @@ class NotificationService implements LoggerAwareInterface {
 				$existing = $this->notificationRepository->findByUniquenessKey(
 					$eventId,
 					$hash,
-					$eventType
+					$notificationType
 				);
 				if ( $existing === null || $existing->isSent() ) {
 					continue;
@@ -159,22 +206,41 @@ class NotificationService implements LoggerAwareInterface {
 		}
 
 		$pendingCount = $this->submissionRepository->countByStatus( SubmissionStatus::PENDING );
+		[ $eventType, $audience ] = $this->parseNotificationType(
+			$notification->getNotificationType(),
+			$event->getAction()
+		);
+
+		$reviewComment = $event->getComment()
+			?? $submission->getReviewComment()
+			?? '';
 
 		$context = [
 			'siteName' => (string)$this->config->get( 'Sitename' ),
-			'eventType' => $notification->getNotificationType(),
+			'eventType' => $eventType,
+			'eventLabel' => $this->messageBuilder->formatEventLabel( $eventType ),
 			'title' => $this->messageBuilder->formatTitle( $submission ),
 			'submitterName' => $submitterName,
 			'submissionId' => $submission->getId(),
 			'submittedAt' => $event->getCreatedAt(),
 			'reviewUrl' => $this->messageBuilder->buildReviewUrl( $submission->getId() ),
+			'submissionUrl' => $this->messageBuilder->buildMySubmissionUrl(),
+			'publishedUrl' => $this->messageBuilder->buildPublishedPageUrl( $submission ),
+			'reviewComment' => $reviewComment,
 			'pendingCount' => $pendingCount,
 			'contentExcerpt' => $excerpt,
+			'audience' => $audience,
 		];
 
+		// Admin mails keep pending count + excerpt; submitter mails do not need them.
+		if ( $audience === ReviewNotificationMessageBuilder::AUDIENCE_SUBMITTER ) {
+			unset( $context['pendingCount'], $context['contentExcerpt'] );
+		}
+
 		$subject = $this->messageBuilder->buildSubject(
-			$notification->getNotificationType(),
-			$submission
+			$eventType,
+			$submission,
+			$audience
 		);
 		$body = $this->messageBuilder->buildBody( $context );
 
@@ -294,6 +360,48 @@ class NotificationService implements LoggerAwareInterface {
 			] );
 			return Status::newFatal( 'anwikiarticlereview-email-send-failed' );
 		}
+	}
+
+	/**
+	 * @return ?string Valid email or null
+	 */
+	private function getSubmitterEmail( int $submissionId ): ?string {
+		$submission = $this->submissionRepository->findById( $submissionId );
+		if ( !$submission ) {
+			return null;
+		}
+		$user = $this->userFactory->newFromId( $submission->getSubmitterUserId() );
+		if ( !$user || !$user->isRegistered() ) {
+			return null;
+		}
+		$email = trim( $user->getEmail() );
+		if ( $email === '' || !filter_var( $email, FILTER_VALIDATE_EMAIL ) ) {
+			return null;
+		}
+		return $email;
+	}
+
+	private function notificationTypeKey( string $eventType, string $audience ): string {
+		if ( $audience === ReviewNotificationMessageBuilder::AUDIENCE_SUBMITTER ) {
+			return $eventType . '-submitter';
+		}
+		return $eventType;
+	}
+
+	/**
+	 * @return array{0:string,1:string} [ eventType, audience ]
+	 */
+	private function parseNotificationType( string $stored, string $fallbackEvent ): array {
+		if ( str_ends_with( $stored, '-submitter' ) ) {
+			$eventType = substr( $stored, 0, -strlen( '-submitter' ) );
+			if ( $eventType === '' ) {
+				$eventType = $fallbackEvent;
+			}
+			return [ $eventType, ReviewNotificationMessageBuilder::AUDIENCE_SUBMITTER ];
+		}
+		// Legacy rows and admin mails store the raw event type.
+		$eventType = $stored !== '' ? $stored : $fallbackEvent;
+		return [ $eventType, ReviewNotificationMessageBuilder::AUDIENCE_ADMIN ];
 	}
 
 	/**
