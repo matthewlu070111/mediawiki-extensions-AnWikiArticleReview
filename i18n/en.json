@@ -131,8 +131,8 @@
 	"anwikiarticlereview-nav-create": "Create new article",
 	"anwikiarticlereview-nav-my-submission": "My review draft",
 	"anwikiarticlereview-nav-review": "Article review",
-	"anwikiarticlereview-missing-page-text": "This article has not been created yet. You can submit a new article for review.",
-	"anwikiarticlereview-missing-page-button": "Submit this page",
+	"anwikiarticlereview-missing-page-text": "This article has not been created yet. You can edit this page and submit it for review.",
+	"anwikiarticlereview-missing-page-button": "Edit and submit this page",
 
 	"anwikiarticlereview-email-subject-submit": "New article submission: $1",
 	"anwikiarticlereview-email-subject-resubmit": "Article resubmitted: $1",

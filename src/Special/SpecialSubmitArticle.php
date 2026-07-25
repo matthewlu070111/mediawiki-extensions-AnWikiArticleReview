@@ -9,6 +9,7 @@ use MediaWiki\Extension\AnWikiArticleReview\Service\TitleValidationService;
 use MediaWiki\Html\Html;
 use MediaWiki\Language\Language;
 use MediaWiki\Permissions\PermissionManager;
+use MediaWiki\Registration\ExtensionRegistry;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\Status\Status;
 use MediaWiki\Title\Title;
@@ -53,6 +54,7 @@ class SpecialSubmitArticle extends SpecialPage {
 		$request = $this->getRequest();
 
 		$out->addModuleStyles( 'ext.anWikiArticleReview.submit' );
+		$this->loadEditorModules();
 
 		if ( $this->submissionService->isUserApproved( $user ) ) {
 			$out->showErrorPage(
@@ -96,10 +98,15 @@ class SpecialSubmitArticle extends SpecialPage {
 		);
 		$out->addHTML( Html::rawElement( 'p', [ 'class' => 'anwiki-change-title' ], $changeLink ) );
 
-		$content = $request->getText( 'wpContent', '' );
+		// Prefer standard edit field name so WikiEditor/CodeMirror find it.
+		$content = $request->getText( 'wpTextbox1', $request->getText( 'wpContent', '' ) );
 		$summary = $request->getText( 'wpSummary', '' );
-		$isPreview = $request->wasPosted() && $request->getCheck( 'wpPreview' );
-		$isSubmit = $request->wasPosted() && $request->getCheck( 'wpSave' );
+		$isPreview = $request->wasPosted() && (
+			$request->getCheck( 'wpPreview' ) || $request->getVal( 'wpPreview' ) !== null
+		);
+		$isSubmit = $request->wasPosted() && (
+			$request->getCheck( 'wpSave' ) || $request->getVal( 'wpSave' ) !== null
+		);
 
 		if ( $request->wasPosted() ) {
 			if ( !$user->matchEditToken( $request->getVal( 'wpEditToken' ) ) ) {
@@ -157,6 +164,20 @@ class SpecialSubmitArticle extends SpecialPage {
 		$this->showForm( $title, $content, $summary );
 	}
 
+	/**
+	 * Load WikiEditor (and related styles) when available.
+	 */
+	private function loadEditorModules(): void {
+		$out = $this->getOutput();
+		$out->addModules( 'ext.anWikiArticleReview.editor' );
+
+		// Match core edit-page toolbar when WikiEditor is installed.
+		if ( ExtensionRegistry::getInstance()->isLoaded( 'WikiEditor' ) ) {
+			$out->addModules( 'ext.wikiEditor' );
+			$out->addModuleStyles( 'ext.wikiEditor.styles' );
+		}
+	}
+
 	private function showForm( Title $title, string $content, string $summary ): void {
 		$out = $this->getOutput();
 		$token = $this->getUser()->getEditToken();
@@ -165,7 +186,8 @@ class SpecialSubmitArticle extends SpecialPage {
 			'method' => 'post',
 			'action' => $this->getPageTitle( $title->getPrefixedText() )->getLocalURL(),
 			'id' => 'anwiki-submit-form',
-			'class' => 'mw-htmlform mw-htmlform-ooui',
+			'class' => 'mw-editform anwiki-editform',
+			'enctype' => 'multipart/form-data',
 		] );
 
 		$form .= Html::element( 'input', [
@@ -179,25 +201,27 @@ class SpecialSubmitArticle extends SpecialPage {
 			'value' => $title->getPrefixedText(),
 		] );
 
-		$form .= Html::rawElement( 'div', [ 'class' => 'mw-htmlform-field-HTMLInfoField' ],
+		$form .= Html::rawElement( 'div', [ 'class' => 'anwiki-page-title-field' ],
 			Html::element( 'label', [], $this->msg( 'anwikiarticlereview-page-title-label' )->text() )
 			. Html::element( 'div', [ 'class' => 'anwiki-readonly-title' ], $title->getPrefixedText() )
 		);
 
-		$form .= Html::rawElement( 'div', [ 'class' => 'mw-htmlform-field-HTMLTextAreaField' ],
-			Html::element( 'label', [ 'for' => 'wpContent' ],
+		// Standard edit textarea identity so WikiEditor auto-init / mw.addWikiEditor work.
+		$form .= Html::rawElement( 'div', [ 'class' => 'editOptions anwiki-content-field' ],
+			Html::element( 'label', [ 'for' => 'wpTextbox1' ],
 				$this->msg( 'anwikiarticlereview-content-label' )->text()
 			)
-			. Html::element( 'textarea', [
-				'name' => 'wpContent',
-				'id' => 'wpContent',
-				'rows' => 25,
+			. Html::textarea( 'wpTextbox1', $content, [
+				'id' => 'wpTextbox1',
 				'cols' => 80,
+				'rows' => 25,
 				'class' => 'mw-editfont-monospace',
-			], $content )
+				'accesskey' => ',',
+				'tabindex' => 1,
+			] )
 		);
 
-		$form .= Html::rawElement( 'div', [ 'class' => 'mw-htmlform-field-HTMLTextField' ],
+		$form .= Html::rawElement( 'div', [ 'class' => 'anwiki-summary-field' ],
 			Html::element( 'label', [ 'for' => 'wpSummary' ],
 				$this->msg( 'anwikiarticlereview-summary-label' )->text()
 			)
@@ -208,23 +232,28 @@ class SpecialSubmitArticle extends SpecialPage {
 				'value' => $summary,
 				'size' => 60,
 				'maxlength' => (int)$this->config->get( 'AnWikiArticleReviewMaxSummaryBytes' ),
+				'tabindex' => 2,
 			] )
 		);
 
-		$form .= Html::rawElement( 'div', [ 'class' => 'mw-htmlform-submit-buttons' ],
-			Html::element( 'button', [
+		$form .= Html::rawElement( 'div', [ 'class' => 'editButtons anwiki-edit-buttons' ],
+			Html::element( 'input', [
 				'type' => 'submit',
 				'name' => 'wpPreview',
-				'value' => '1',
-				'class' => 'mw-htmlform-submit mw-ui-button',
-			], $this->msg( 'anwikiarticlereview-preview' )->text() )
+				'id' => 'wpPreview',
+				'value' => $this->msg( 'anwikiarticlereview-preview' )->text(),
+				'class' => 'mw-ui-button',
+				'tabindex' => 3,
+			] )
 			. ' '
-			. Html::element( 'button', [
+			. Html::element( 'input', [
 				'type' => 'submit',
 				'name' => 'wpSave',
-				'value' => '1',
-				'class' => 'mw-htmlform-submit mw-ui-button mw-ui-progressive',
-			], $this->msg( 'anwikiarticlereview-submit-for-review' )->text() )
+				'id' => 'wpSave',
+				'value' => $this->msg( 'anwikiarticlereview-submit-for-review' )->text(),
+				'class' => 'mw-ui-button mw-ui-progressive',
+				'tabindex' => 4,
+			] )
 		);
 
 		$form .= Html::closeElement( 'form' );

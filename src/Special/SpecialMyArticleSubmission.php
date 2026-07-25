@@ -49,6 +49,11 @@ class SpecialMyArticleSubmission extends SpecialPage {
 		$request = $this->getRequest();
 
 		$out->addModuleStyles( 'ext.anWikiArticleReview.submit' );
+		$out->addModules( 'ext.anWikiArticleReview.editor' );
+		if ( \MediaWiki\Registration\ExtensionRegistry::getInstance()->isLoaded( 'WikiEditor' ) ) {
+			$out->addModules( 'ext.wikiEditor' );
+			$out->addModuleStyles( 'ext.wikiEditor.styles' );
+		}
 
 		$submission = $this->submissionService->getBySubmitter( $user->getId() );
 
@@ -82,7 +87,7 @@ class SpecialMyArticleSubmission extends SpecialPage {
 						) ) );
 					}
 				} elseif ( $action === 'resubmit' ) {
-					$content = $request->getText( 'wpContent' );
+					$content = $request->getText( 'wpTextbox1', $request->getText( 'wpContent' ) );
 					$summary = $request->getText( 'wpSummary' );
 					$status = $this->submissionService->resubmit(
 						$user,
@@ -223,6 +228,7 @@ class SpecialMyArticleSubmission extends SpecialPage {
 				'method' => 'post',
 				'action' => $this->getPageTitle()->getLocalURL(),
 				'id' => 'anwiki-resubmit-form',
+				'class' => 'mw-editform anwiki-editform',
 			] ) );
 			$out->addHTML( Html::element( 'input', [
 				'type' => 'hidden', 'name' => 'wpEditToken', 'value' => $token,
@@ -230,27 +236,33 @@ class SpecialMyArticleSubmission extends SpecialPage {
 			$out->addHTML( Html::element( 'input', [
 				'type' => 'hidden', 'name' => 'wpAction', 'value' => 'resubmit',
 			] ) );
-			$out->addHTML( Html::element( 'textarea', [
-				'name' => 'wpContent',
+			$out->addHTML( Html::element( 'label', [ 'for' => 'wpTextbox1' ],
+				$this->msg( 'anwikiarticlereview-content-label' )->text()
+			) );
+			$out->addHTML( Html::textarea( 'wpTextbox1', $content, [
+				'id' => 'wpTextbox1',
 				'rows' => 25,
 				'cols' => 80,
 				'class' => 'mw-editfont-monospace',
-			], $content ) );
-			$out->addHTML( Html::element( 'br' ) );
-			$out->addHTML( Html::element( 'label', [ 'for' => 'wpSummary' ],
-				$this->msg( 'anwikiarticlereview-summary-label' )->text()
-			) );
-			$out->addHTML( Html::element( 'input', [
-				'type' => 'text',
-				'name' => 'wpSummary',
-				'id' => 'wpSummary',
-				'size' => 60,
 			] ) );
-			$out->addHTML( Html::element( 'br' ) );
-			$out->addHTML( Html::element( 'button', [
-				'type' => 'submit',
-				'class' => 'mw-ui-button mw-ui-progressive',
-			], $this->msg( 'anwikiarticlereview-resubmit' )->text() ) );
+			$out->addHTML( Html::rawElement( 'div', [ 'class' => 'anwiki-summary-field' ],
+				Html::element( 'label', [ 'for' => 'wpSummary' ],
+					$this->msg( 'anwikiarticlereview-summary-label' )->text()
+				)
+				. Html::element( 'input', [
+					'type' => 'text',
+					'name' => 'wpSummary',
+					'id' => 'wpSummary',
+					'size' => 60,
+				] )
+			) );
+			$out->addHTML( Html::rawElement( 'div', [ 'class' => 'anwiki-edit-buttons' ],
+				Html::element( 'input', [
+					'type' => 'submit',
+					'class' => 'mw-ui-button mw-ui-progressive',
+					'value' => $this->msg( 'anwikiarticlereview-resubmit' )->text(),
+				] )
+			) );
 			$out->addHTML( Html::closeElement( 'form' ) );
 		}
 

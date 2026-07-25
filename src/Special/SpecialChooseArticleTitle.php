@@ -63,17 +63,45 @@ class SpecialChooseArticleTitle extends FormSpecialPage {
 
 		$this->getOutput()->addModuleStyles( 'ext.anWikiArticleReview.chooseTitle' );
 
-		// Prefill from ?title= (must still re-validate on submit).
+		// Prefill only from intentional params. Never use MediaWiki's reserved
+		// "title" query parameter — that is always the current page
+		// (e.g. "Special:选择条目名称") when using index.php?title=...
 		// Do not name this helper setParameter(): FormSpecialPage already has a
 		// protected setParameter() used by parent::execute(); a private method
 		// with the same name is an illegal visibility reduction in PHP and
 		// fatals when the class is loaded (breaking Special:SpecialPages).
 		$request = $this->getRequest();
-		if ( $request->getCheck( 'title' ) && !$request->wasPosted() ) {
-			$this->setPrefillTitle( $request->getText( 'title' ) );
+		if ( !$request->wasPosted() ) {
+			$prefill = $request->getText( 'newtitle', '' );
+			if ( $prefill === '' ) {
+				// Back-compat alias used by older missing-page links
+				$prefill = $request->getText( 'pagename', '' );
+			}
+			// Subpage form: Special:ChooseArticleTitle/Some_Page
+			if ( $prefill === '' && is_string( $par ) && $par !== '' ) {
+				$prefill = str_replace( '_', ' ', $par );
+			}
+			// Reject values that are clearly the special page itself
+			if ( $prefill !== '' && !$this->isSelfSpecialTitle( $prefill ) ) {
+				$this->setPrefillTitle( $prefill );
+			}
 		}
 
 		parent::execute( $par );
+	}
+
+	/**
+	 * True when $text names this special page (any language alias).
+	 */
+	private function isSelfSpecialTitle( string $text ): bool {
+		$t = Title::newFromText( $text );
+		if ( $t === null || !$t->isSpecialPage() ) {
+			return false;
+		}
+		[ $name ] = $this->getMediaWikiServices()
+			->getSpecialPageFactory()
+			->resolveAlias( $t->getDBkey() );
+		return $name === $this->getName();
 	}
 
 	/**
@@ -88,36 +116,37 @@ class SpecialChooseArticleTitle extends FormSpecialPage {
 	/** @inheritDoc */
 	protected function getFormFields(): array {
 		$hintConfig = (string)$this->config->get( 'AnWikiArticleReviewTitleHint' );
-		if ( $hintConfig !== '' ) {
-			// Plain text only — HTMLForm help will escape via message or we escape ourselves
-			$hint = htmlspecialchars( $hintConfig, ENT_QUOTES | ENT_HTML5 );
-		} else {
-			$hint = $this->msg( 'anwikiarticlereview-title-hint' )->escaped();
-		}
-
 		$placeholderConfig = (string)$this->config->get( 'AnWikiArticleReviewTitlePlaceholder' );
 		$placeholder = $placeholderConfig !== ''
 			? $placeholderConfig
 			: $this->msg( 'anwikiarticlereview-title-placeholder' )->text();
 
+		// Default must stay empty unless intentionally prefilled.
+		// Do not fall back to request "title" (MediaWiki reserved).
 		$default = $this->prefillTitle;
-		if ( $default === '' ) {
+		if ( $default === '' && $this->getRequest()->wasPosted() ) {
 			$default = $this->getRequest()->getText( 'wpTitle', '' );
 		}
 
-		return [
-			'Title' => [
-				'type' => 'text',
-				'name' => 'wpTitle',
-				'label-message' => 'anwikiarticlereview-title-label',
-				'default' => $default,
-				'required' => true,
-				'placeholder' => $placeholder,
-				'help' => $hint,
-				// help is raw HTML from us (already escaped config / escaped message)
-				'help-raw' => true,
-			],
+		$field = [
+			'type' => 'text',
+			'name' => 'wpTitle',
+			'label-message' => 'anwikiarticlereview-title-label',
+			'default' => $default,
+			'required' => true,
+			'placeholder' => $placeholder,
+			// OOUI shows help as a popup unless help-inline is true.
+			'help-inline' => true,
 		];
+
+		if ( $hintConfig !== '' ) {
+			// Plain text only — HTMLForm escapes help content.
+			$field['help'] = $hintConfig;
+		} else {
+			$field['help-message'] = 'anwikiarticlereview-title-hint';
+		}
+
+		return [ 'Title' => $field ];
 	}
 
 	/** @inheritDoc */

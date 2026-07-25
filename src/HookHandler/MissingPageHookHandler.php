@@ -57,9 +57,12 @@ class MissingPageHookHandler implements BeforeDisplayNoArticleTextHook {
 			return true;
 		}
 
-		$chooseUrl = SpecialPage::getTitleFor( 'ChooseArticleTitle' )->getLocalURL( [
-			'title' => $title->getPrefixedText(),
-		] );
+		// Go straight to the body editor for this page name.
+		// (Do not use ChooseArticleTitle?title= — "title" is reserved by MediaWiki.)
+		$submitUrl = SpecialPage::getTitleFor(
+			'SubmitArticle',
+			$title->getPrefixedText()
+		)->getLocalURL();
 
 		$html = Html::rawElement( 'div', [ 'class' => 'anwiki-missing-page-submit' ],
 			Html::element( 'p', [],
@@ -67,7 +70,7 @@ class MissingPageHookHandler implements BeforeDisplayNoArticleTextHook {
 			)
 			. Html::rawElement( 'p', [],
 				Html::element( 'a', [
-					'href' => $chooseUrl,
+					'href' => $submitUrl,
 					'class' => 'mw-ui-button mw-ui-progressive',
 				], $article->getContext()->msg( 'anwikiarticlereview-missing-page-button' )->text() )
 			)

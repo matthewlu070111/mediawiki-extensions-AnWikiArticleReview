@@ -154,7 +154,7 @@ $wgAnWikiArticleReviewPromoteOnApprove = true;
 | Page | Audience | Purpose |
 |------|----------|---------|
 | `Special:ChooseArticleTitle` | Submitters | Choose / validate title |
-| `Special:SubmitArticle/<title>` | Submitters | Body, preview, submit |
+| `Special:SubmitArticle/<title>` | Submitters | Body (WikiEditor toolbar), preview, submit |
 | `Special:MyArticleSubmission` | Submitters | Own submission, resubmit, withdraw |
 | `Special:ArticleReview` | Reviewers | List and process submissions |
 | `Special:ReviewNotifications` | Admins | Email notification status / retry |
@@ -185,6 +185,11 @@ $wgAnWikiArticleReviewTitlePlaceholder =
 ```
 
 Rules:
+
+- Do not prefill via MediaWiki’s reserved `title` query parameter; use `newtitle`, `pagename`, or a special-page subpath
+- Missing-page prompts link to `Special:SubmitArticle/<PageName>` (not the title chooser)
+- Install **WikiEditor** for the standard wikitext toolbar on submit/resubmit forms (soft dependency)
+- VisualEditor is not embedded: VE needs a real page edit session; this workflow uses a special-page form before the page exists
 
 - Hint is **not** parsed as wikitext or HTML
 - Empty hint falls back to i18n message `anwikiarticlereview-title-hint`

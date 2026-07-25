@@ -5,8 +5,15 @@
 	background: #ffffe0;
 }
 
-.mw-htmlform .oo-ui-fieldLayout-help {
+/* Keep title-field help visible inline under the input (OOUI FieldLayout). */
+.mw-htmlform .oo-ui-fieldLayout-help,
+.mw-htmlform .oo-ui-fieldLayout-message {
 	color: #54595d;
 	font-size: 0.9em;
+	margin-top: 0.35em;
+	display: block;
+}
+
+.mw-htmlform .oo-ui-fieldLayout.oo-ui-fieldLayout-align-top > .oo-ui-fieldLayout-body > .oo-ui-fieldLayout-help {
 	margin-top: 0.35em;
 }

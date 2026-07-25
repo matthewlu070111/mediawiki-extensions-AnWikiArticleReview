@@ -207,7 +207,7 @@ $wgAnWikiArticleReviewPromoteOnApprove = true;         // 默认 true
 | 页面 | 使用者 | 用途 |
 |------|--------|------|
 | `Special:ChooseArticleTitle` | 投稿者 | 选择并校验标题 |
-| `Special:SubmitArticle/<标题>` | 投稿者 | 正文、预览、提交 |
+| `Special:SubmitArticle/<标题>` | 投稿者 | 正文（WikiEditor 工具栏）、预览、提交 |
 | `Special:MyArticleSubmission` | 投稿者 | 自己的稿件、重提、撤回 |
 | `Special:ArticleReview` | 审核员 | 列表与处理 |
 | `Special:ReviewNotifications` | 管理员 | 邮件状态 / 重试 |
@@ -243,6 +243,14 @@ $wgAnWikiArticleReviewTitlePlaceholder =
 - 配置为空时使用 i18n 消息 `anwikiarticlereview-title-hint`
 - 不能通过 URL 参数覆盖提示
 - 标题选择页只做**预检查**，**不会**在数据库中占用标题
+- 不要用 MediaWiki 保留的 `title` 查询参数做预填；需要预填时用 `newtitle` / `pagename` 或子路径
+- 缺页入口直接进入 `Special:SubmitArticle/<页面名>`，而不是标题选择页
+
+### 编辑器（推荐安装 WikiEditor）
+
+提交页与重提表单使用标准 `#wpTextbox1` 编辑框。若站点已安装并启用 **WikiEditor**，会自动加载与普通编辑页相同的源码工具栏。
+
+VisualEditor 依赖真实页面的编辑会话（Parsoid + 编辑 API），不适用于尚无正式页面、且用户尚无 `edit` 权限的资格投稿流程，因此本扩展不嵌入 VE。
 
 ---
 

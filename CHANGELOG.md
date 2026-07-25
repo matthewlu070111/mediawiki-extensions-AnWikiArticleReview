@@ -2,6 +2,19 @@
 
 All notable changes to AnWikiArticleReview are documented in this file.
 
+## [0.1.3] — 2026-07-25
+
+### Fixed
+
+- **ChooseArticleTitle** no longer prefills the title field with `Special:…` itself. MediaWiki’s reserved `title` query parameter was being treated as a prefill value; intentional prefill now uses `newtitle`, `pagename`, or a special-page subpage path only.
+- Title-field **hint** now uses HTMLForm `help-message` / plain `help` with `help-inline`, so the configured or default hint text actually appears under the input.
+- Missing-page prompt links to **`Special:SubmitArticle/<PageName>`** instead of `ChooseArticleTitle?title=…`, and copy now says users can edit and submit the page.
+
+### Improved
+
+- Submit and resubmit forms use the standard `#wpTextbox1` edit control and load **WikiEditor** (toolbar) when that extension is installed, instead of a bare monospace textarea.
+- Soft dependency only: without WikiEditor the form still works as a plain textarea.
+
 ## [1.0.0] — 2026-07-24
 
 ### Added

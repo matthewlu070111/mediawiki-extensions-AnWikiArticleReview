@@ -131,8 +131,8 @@
 	"anwikiarticlereview-nav-create": "Personal menu: create article.",
 	"anwikiarticlereview-nav-my-submission": "Personal menu: my submission.",
 	"anwikiarticlereview-nav-review": "Personal menu: review.",
-	"anwikiarticlereview-missing-page-text": "Text on missing allowed pages.",
-	"anwikiarticlereview-missing-page-button": "Button on missing allowed pages.",
+	"anwikiarticlereview-missing-page-text": "Prompt on missing allowed pages for unapproved submitters. Explains they can edit and submit the page for review.",
+	"anwikiarticlereview-missing-page-button": "Button on missing allowed pages. Links to Special:SubmitArticle/<pagename>.",
 
 	"anwikiarticlereview-email-subject-submit": "Email subject. $1 is title.",
 	"anwikiarticlereview-email-subject-resubmit": "Email subject. $1 is title.",

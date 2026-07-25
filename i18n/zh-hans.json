@@ -131,8 +131,8 @@
 	"anwikiarticlereview-nav-create": "创建新条目",
 	"anwikiarticlereview-nav-my-submission": "我的审核稿",
 	"anwikiarticlereview-nav-review": "条目审核",
-	"anwikiarticlereview-missing-page-text": "该条目尚未创建。您可以提交一份新条目供审核。",
-	"anwikiarticlereview-missing-page-button": "提交此页面",
+	"anwikiarticlereview-missing-page-text": "该条目尚未创建。您可以编辑此页面并提交审核。",
+	"anwikiarticlereview-missing-page-button": "编辑并提交此页面",
 
 	"anwikiarticlereview-email-subject-submit": "新条目投稿：$1",
 	"anwikiarticlereview-email-subject-resubmit": "条目重新提交：$1",
